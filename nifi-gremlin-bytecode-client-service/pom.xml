@@ -19,12 +19,12 @@
     <parent>
         <groupId>org.apache.nifi</groupId>
         <artifactId>nifi-gremlin-bytecode-driver</artifactId>
-        <version>1.10.0</version>
+        <version>1.0.0</version>
     </parent>
 
-    <artifactId>nifi-nifi-gremlin-bytecode-client-service</artifactId>
+    <artifactId>nifi-gremlin-bytecode-client-service</artifactId>
     <packaging>jar</packaging>
-    <version>1.10.0</version>
+    <version>1.0.0</version>
 
     <dependencies>
         <dependency>
@@ -40,6 +40,21 @@
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-processor-utils</artifactId>
             <version>1.10.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tinkerpop</groupId>
+            <artifactId>gremlin-driver</artifactId>
+            <version>3.4.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy</artifactId>
+            <version>2.5.10</version>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-jsr223</artifactId>
+            <version>2.5.10</version>
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>

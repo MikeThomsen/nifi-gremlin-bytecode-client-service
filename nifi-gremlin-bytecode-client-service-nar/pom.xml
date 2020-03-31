@@ -19,11 +19,11 @@
     <parent>
         <groupId>org.apache.nifi</groupId>
         <artifactId>nifi-gremlin-bytecode-driver</artifactId>
-        <version>1.10.0</version>
+        <version>1.0.0</version>
     </parent>
 
     <artifactId>nifi-gremlin-bytecode-client-service-nar</artifactId>
-    <version>1.10.0</version>
+    <version>1.0.0</version>
     <packaging>nar</packaging>
     <properties>
         <maven.javadoc.skip>true</maven.javadoc.skip>
@@ -39,7 +39,8 @@
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-nifi-gremlin-bytecode-client-service</artifactId>
+            <artifactId>nifi-gremlin-bytecode-client-service</artifactId>
+            <version>1.0.0</version>
         </dependency>
     </dependencies>
 

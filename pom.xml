@@ -24,7 +24,7 @@
 
     <groupId>org.apache.nifi</groupId>
     <artifactId>nifi-gremlin-bytecode-driver</artifactId>
-    <version>1.10.0</version>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
 
     <properties>
