@@ -77,7 +77,6 @@ public class GremlinBytecodeClientService extends BorrowedBase implements GraphC
     private ScriptEngineManager MANAGER = new ScriptEngineManager();
     private ScriptEngine engine;
     private Map<String, CompiledScript> compiledCode;
-    private GraphTraversalSource traversal;
     private Cluster cluster;
 
     /**
@@ -92,18 +91,12 @@ public class GremlinBytecodeClientService extends BorrowedBase implements GraphC
 
         compiledCode = new ConcurrentHashMap<>();
         engine = MANAGER.getEngineByName("groovy");
-
-        try {
-            traversal = AnonymousTraversalSource.traversal().withRemote(DriverRemoteConnection.using(cluster));
-        } catch (Exception e) {
-            throw new InitializationException(e);
-        }
     }
 
     @OnDisabled
     public void shutdown() {
         try {
-            traversal.close();
+            cluster.close();
             compiledCode = null;
             engine = null;
         } catch (Exception e) {
@@ -115,6 +108,13 @@ public class GremlinBytecodeClientService extends BorrowedBase implements GraphC
     public Map<String, String> executeQuery(String s, Map<String, Object> map, GraphQueryResultCallback graphQueryResultCallback) {
         String hash = DigestUtils.md5Hex(s);
         CompiledScript compiled;
+        GraphTraversalSource traversal;
+
+        try {
+            traversal = AnonymousTraversalSource.traversal().withRemote(DriverRemoteConnection.using(cluster));
+        } catch (Exception e) {
+            throw new ProcessException(e);
+        }
 
         if (compiledCode.containsKey(hash)) {
             compiled = compiledCode.get(hash);
@@ -140,7 +140,9 @@ public class GremlinBytecodeClientService extends BorrowedBase implements GraphC
                 resultMap.put("result", result);
                 graphQueryResultCallback.process(resultMap, false);
             }
-        } catch (ScriptException e) {
+
+            traversal.close();
+        } catch (Exception e) {
             throw new ProcessException(e);
         }
 
