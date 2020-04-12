@@ -21,7 +21,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.nifi.annotation.lifecycle.OnDisabled;
 import org.apache.nifi.annotation.lifecycle.OnEnabled;
 import org.apache.nifi.components.PropertyDescriptor;
-import org.apache.nifi.controller.AbstractControllerService;
 import org.apache.nifi.controller.ConfigurationContext;
 import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.graph.GraphClientService;
@@ -32,8 +31,6 @@ import org.apache.tinkerpop.gremlin.driver.Cluster;
 import org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection;
 import org.apache.tinkerpop.gremlin.process.traversal.AnonymousTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.util.empty.EmptyGraph;
 
 import javax.script.Bindings;
 import javax.script.Compilable;
@@ -42,7 +39,6 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -96,9 +92,9 @@ public class GremlinBytecodeClientService extends BorrowedBase implements GraphC
     @OnDisabled
     public void shutdown() {
         try {
-            cluster.close();
             compiledCode = null;
             engine = null;
+            cluster.close();
         } catch (Exception e) {
             throw new ProcessException(e);
         }
@@ -151,6 +147,6 @@ public class GremlinBytecodeClientService extends BorrowedBase implements GraphC
 
     @Override
     public String getTransitUrl() {
-        return "gremlin://";
+        return transitUrl;
     }
 }
