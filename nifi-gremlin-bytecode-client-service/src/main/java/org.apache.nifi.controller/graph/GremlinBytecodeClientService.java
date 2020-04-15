@@ -18,15 +18,19 @@ package org.apache.nifi.controller.graph;
 
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.nifi.annotation.documentation.CapabilityDescription;
+import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.annotation.lifecycle.OnDisabled;
 import org.apache.nifi.annotation.lifecycle.OnEnabled;
 import org.apache.nifi.components.PropertyDescriptor;
+import org.apache.nifi.components.Validator;
 import org.apache.nifi.controller.ConfigurationContext;
 import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.graph.GraphClientService;
 import org.apache.nifi.graph.GraphQueryResultCallback;
 import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.reporting.InitializationException;
+import org.apache.nifi.util.StringUtils;
 import org.apache.tinkerpop.gremlin.driver.Cluster;
 import org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection;
 import org.apache.tinkerpop.gremlin.process.traversal.AnonymousTraversalSource;
@@ -45,22 +49,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@CapabilityDescription("A client service that provides a scriptable interface to open a remote connection/travseral " +
+        "against a Gremlin Server and execute operations against it.")
+@Tags({ "graph", "database", "gremlin", "tinkerpop" })
 public class GremlinBytecodeClientService extends BorrowedBase implements GraphClientService {
-
     private static final List<PropertyDescriptor> NEW_DESCRIPTORS;
 
-    public static final PropertyDescriptor ADDITIONAL_JARS = new PropertyDescriptor.Builder()
-        .name("gremlin-bytecode-additional-jars")
-        .displayName("Additional Jars")
-        .description("Additional jars needed for the traversal to work go here.")
-        .dynamicallyModifiesClasspath(true)
-        .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
-        .build();
+    public static final PropertyDescriptor TRAVERSAL_SOURCE_NAME = new PropertyDescriptor.Builder()
+            .name("gremlin-traversal-source-name")
+            .displayName("Traversal Source Name")
+            .description("An optional property that lets you set the name of the remote traversal instance. " +
+                    "This can be really important when working with databases like JanusGraph that support " +
+                    "multiple backend traversal configurations simultaneously.")
+            .expressionLanguageSupported(ExpressionLanguageScope.VARIABLE_REGISTRY)
+            .addValidator(Validator.VALID)
+            .build();
 
     static {
         List<PropertyDescriptor> _temp = new ArrayList<>();
         _temp.addAll(DESCRIPTORS);
-        _temp.add(ADDITIONAL_JARS);
+        _temp.add(TRAVERSAL_SOURCE_NAME);
         NEW_DESCRIPTORS = Collections.unmodifiableList(_temp);
     }
 
@@ -74,6 +82,7 @@ public class GremlinBytecodeClientService extends BorrowedBase implements GraphC
     private ScriptEngine engine;
     private Map<String, CompiledScript> compiledCode;
     private Cluster cluster;
+    private String traversalSourceName;
 
     /**
      * @param context
@@ -87,6 +96,11 @@ public class GremlinBytecodeClientService extends BorrowedBase implements GraphC
 
         compiledCode = new ConcurrentHashMap<>();
         engine = MANAGER.getEngineByName("groovy");
+
+        if (context.getProperty(TRAVERSAL_SOURCE_NAME).isSet()) {
+            traversalSourceName = context.getProperty(TRAVERSAL_SOURCE_NAME).evaluateAttributeExpressions()
+                    .getValue();
+        }
     }
 
     @OnDisabled
@@ -107,7 +121,11 @@ public class GremlinBytecodeClientService extends BorrowedBase implements GraphC
         GraphTraversalSource traversal;
 
         try {
-            traversal = AnonymousTraversalSource.traversal().withRemote(DriverRemoteConnection.using(cluster));
+            if (StringUtils.isEmpty(traversalSourceName)) {
+                traversal = AnonymousTraversalSource.traversal().withRemote(DriverRemoteConnection.using(cluster));
+            } else {
+                traversal = AnonymousTraversalSource.traversal().withRemote(DriverRemoteConnection.using(cluster, traversalSourceName));
+            }
         } catch (Exception e) {
             throw new ProcessException(e);
         }
